@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace nova\plugin\image\adapters;
@@ -26,7 +27,7 @@ class GDAdapter implements AdapterInterface
     private string $mime;
 
     /**
-     * @param string $path 图片文件路径
+     * @param  string                                       $path 图片文件路径
      * @throws \InvalidArgumentException| \RuntimeException
      */
     public function __construct(string $path)
@@ -57,8 +58,10 @@ class GDAdapter implements AdapterInterface
         $this->img = match (true) {
             $type === IMAGETYPE_JPEG => imagecreatefromjpeg($path),
 
-            $type === IMAGETYPE_PNG  => tap(imagecreatefrompng($path),
-                fn($im) => imagesavealpha($im, true)),
+            $type === IMAGETYPE_PNG  => tap(
+                imagecreatefrompng($path),
+                fn ($im) => imagesavealpha($im, true)
+            ),
 
             $type === IMAGETYPE_GIF  => imagecreatefromgif($path),
 
@@ -162,7 +165,7 @@ class GDAdapter implements AdapterInterface
 
     /**
      * 等比或强制缩放至指定宽高
-     * @param int $width 目标宽度
+     * @param int $width  目标宽度
      * @param int $height 目标高度
      */
     public function resize(int $width, int $height): static
@@ -170,14 +173,24 @@ class GDAdapter implements AdapterInterface
         $dst = imagecreatetruecolor($width, $height);
         /* 保留透明通道 */
         imagesavealpha($dst, true);
-        imagefill($dst, 0, 0,
-            imagecolorallocatealpha($dst, 0, 0, 0, 127));
+        imagefill(
+            $dst,
+            0,
+            0,
+            imagecolorallocatealpha($dst, 0, 0, 0, 127)
+        );
 
         imagecopyresampled(
-            $dst, $this->img,
-            0, 0, 0, 0,
-            $width, $height,
-            $this->width(), $this->height()
+            $dst,
+            $this->img,
+            0,
+            0,
+            0,
+            0,
+            $width,
+            $height,
+            $this->width(),
+            $this->height()
         );
         imagedestroy($this->img);
         $this->img = $dst;
@@ -191,14 +204,24 @@ class GDAdapter implements AdapterInterface
     {
         $dst = imagecreatetruecolor($w, $h);
         imagesavealpha($dst, true);
-        imagefill($dst, 0, 0,
-            imagecolorallocatealpha($dst, 0, 0, 0, 127));
+        imagefill(
+            $dst,
+            0,
+            0,
+            imagecolorallocatealpha($dst, 0, 0, 0, 127)
+        );
 
         imagecopyresampled(
-            $dst, $this->img,
-            0, 0, $x, $y,
-            $w, $h,
-            $w, $h
+            $dst,
+            $this->img,
+            0,
+            0,
+            $x,
+            $y,
+            $w,
+            $h,
+            $w,
+            $h
         );
         imagedestroy($this->img);
         $this->img = $dst;
@@ -247,8 +270,7 @@ class GDAdapter implements AdapterInterface
         string $overlayPath,
         string $position = 'bottom-right',
         float  $opacity  = 0.4
-    ): static
-    {
+    ): static {
         $wm = (new self($overlayPath))->resource();
         $w  = imagesx($wm);
         $h  = imagesy($wm);
@@ -264,8 +286,8 @@ class GDAdapter implements AdapterInterface
 
     /**
      * 文字写入
-     * @param string $text 文本
-     * @param int    $size 字号
+     * @param string $text     文本
+     * @param int    $size     字号
      * @param string $hexColor 颜色（#rrggbb）
      * @param string $fontPath TTF 字体路径
      */
@@ -276,8 +298,7 @@ class GDAdapter implements AdapterInterface
         string $fontPath  = '',
         int    $x         = 0,
         int    $y         = 0
-    ): static
-    {
+    ): static {
         if (!file_exists($fontPath)) {
             throw new \InvalidArgumentException("字体不存在: $fontPath");
         }
@@ -286,9 +307,13 @@ class GDAdapter implements AdapterInterface
 
         imagettftext(
             $this->img,
-            $size, 0,
-            $x, $y + $size,
-            $col, $fontPath, $text
+            $size,
+            0,
+            $x,
+            $y + $size,
+            $col,
+            $fontPath,
+            $text
         );
         return $this;
     }
@@ -461,7 +486,6 @@ class GDAdapter implements AdapterInterface
         return $hist;
     }
 
-
     /* ==================== 接下来是保存 / 编码 / 压缩等 ==================== */
     /* ------------------------------------------------------------------ */
     /*  保存 / 输出 / 编码                                                */
@@ -478,7 +502,7 @@ class GDAdapter implements AdapterInterface
             'jpg', 'jpeg' => imagejpeg($this->img, $path, $quality),
             'png'         => imagepng($this->img, $path),
             'gif'         => imagegif($this->img, $path),
-            'bmp'         => self::checkFn('imagebmp')  ? imagebmp($this->img, $path)  : null,
+            'bmp'         => self::checkFn('imagebmp') ? imagebmp($this->img, $path) : null,
             'wbmp'        => self::checkFn('imagewbmp') ? imagewbmp($this->img, $path) : null,
             'webp'        => self::checkFn('imagewebp') ? imagewebp($this->img, $path, $quality) : null,
             'avif'        => self::checkFn('imageavif') ? imageavif($this->img, $path, $quality) : null,
@@ -511,8 +535,7 @@ class GDAdapter implements AdapterInterface
         string $mime = 'image/png',
         int    $quality = 90,
         bool   $dataUri = false
-    ): string
-    {
+    ): string {
         $raw = $this->encode($mime, $quality);
         $b64 = base64_encode($raw);
         return $dataUri ? "data:$mime;base64,$b64" : $b64;
@@ -530,9 +553,13 @@ class GDAdapter implements AdapterInterface
 
         /* 自动选格式 */
         if ($fmt === null) {
-            if (self::checkFn('imagewebp'))      { $fmt = 'webp'; }
-            elseif (self::checkFn('imageavif'))  { $fmt = 'avif'; }
-            else                                 { $fmt = $this->mimeToExt($this->mime); }
+            if (self::checkFn('imagewebp')) {
+                $fmt = 'webp';
+            } elseif (self::checkFn('imageavif')) {
+                $fmt = 'avif';
+            } else {
+                $fmt = $this->mimeToExt($this->mime);
+            }
         }
 
         /* 重新编码到内存 */
@@ -548,7 +575,6 @@ class GDAdapter implements AdapterInterface
         $this->mime = $this->extToMime($fmt);
         return $this;
     }
-
 
     /**
      * 返回当前 mime
@@ -568,7 +594,7 @@ class GDAdapter implements AdapterInterface
             'image/jpeg'                     => imagejpeg($this->img, null, $quality),
             'image/png'                      => imagepng($this->img),
             'image/gif'                      => imagegif($this->img),
-            'image/bmp'                      => self::checkFn('imagebmp')  ? imagebmp($this->img)  : null,
+            'image/bmp'                      => self::checkFn('imagebmp') ? imagebmp($this->img) : null,
             'image/vnd.wap.wbmp',
             'image/wbmp'                     => self::checkFn('imagewbmp') ? imagewbmp($this->img) : null,
             'image/webp'                     => self::checkFn('imagewebp') ? imagewebp($this->img, null, $quality) : null,
@@ -624,7 +650,7 @@ class GDAdapter implements AdapterInterface
             'image/png'                       => 'png',
             'image/gif'                       => 'gif',
             'image/bmp'                       => 'bmp',
-            'image/vnd.wap.wbmp', 'image/wbmp'=> 'wbmp',
+            'image/vnd.wap.wbmp', 'image/wbmp' => 'wbmp',
             'image/webp'                      => 'webp',
             'image/avif'                      => 'avif',
             'image/x-icon',
@@ -644,7 +670,6 @@ class GDAdapter implements AdapterInterface
         }
     }
 
-
 }
 
 /* -------------------------------------------------------------------- */
@@ -657,4 +682,3 @@ if (!function_exists('nova\\plugin\\image\\adapters\\tap')) {
         return $value;
     }
 }
-

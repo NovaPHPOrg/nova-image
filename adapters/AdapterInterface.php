@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace nova\plugin\image\adapters;
@@ -106,12 +107,12 @@ interface AdapterInterface
     /**
      * 写文字。
      *
-     * @param string $text      UTF‑8 字符串。
-     * @param int    $size      字号 pt。
-     * @param string $hexColor  颜色 `#rrggbb`。
-     * @param string $fontPath  TrueType/OpenType 字体文件路径。
-     * @param int    $x         左上 X 偏移。
-     * @param int    $y         左上 Y 偏移。
+     * @param string $text     UTF‑8 字符串。
+     * @param int    $size     字号 pt。
+     * @param string $hexColor 颜色 `#rrggbb`。
+     * @param string $fontPath TrueType/OpenType 字体文件路径。
+     * @param int    $x        左上 X 偏移。
+     * @param int    $y        左上 Y 偏移。
      */
     public function text(string $text, int $size = 16, string $hexColor = '#ffffff', string $fontPath = '', int $x = 0, int $y = 0): static;
 

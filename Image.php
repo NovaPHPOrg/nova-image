@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace nova\plugin\image;
@@ -23,9 +24,9 @@ class Image
 
     public function __construct(string $path)
     {
-        if(extension_loaded('gd')){
+        if (extension_loaded('gd')) {
             $this->adapter = new GDAdapter($path);
-        }else{
+        } else {
             throw new RuntimeException("没有支持的图片库，请安装gd。");
         }
     }
